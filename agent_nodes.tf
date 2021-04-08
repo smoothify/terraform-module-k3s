@@ -54,10 +54,13 @@ locals {
         [for key, value in try(agent.taints, {}) : "--node-taint '${key}=${value}'" if value != null]
       )))
 
+      env = merge(var.global_env, try(agent.env, {}))
+    
       immutable_fields_hash = sha1(join("", concat(
         [var.name],
         var.global_flags,
         try(agent.flags, []),
+        [jsonencode(var.global_env), jsonencode(try(agent.env, {}))],
       )))
     }
   }
@@ -109,10 +112,16 @@ resource "null_resource" "agents_install" {
     destination = "/tmp/k3s-installer"
   }
 
+  // Upload env file
+  provisioner "file" {
+    content     = templatefile("${path.module}/templates/env.sh.tpl", { env = local.agents_metadata[each.key].env } )
+    destination = "/tmp/env.sh"
+  }
+  
   // Install k3s
   provisioner "remote-exec" {
     inline = [
-      "INSTALL_K3S_VERSION=${local.k3s_version} sh /tmp/k3s-installer agent ${local.agents_metadata[each.key].flags}",
+      ". /tmp/env.sh && INSTALL_K3S_VERSION=${local.k3s_version} sh /tmp/k3s-installer agent ${local.agents_metadata[each.key].flags}",
       "until systemctl is-active --quiet k3s-agent.service; do sleep 1; done"
     ]
   }

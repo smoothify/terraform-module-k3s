@@ -99,10 +99,13 @@ locals {
         [for key, value in try(server.taints, {}) : "--node-taint '${key}=${value}'" if value != null]
       )))
 
+      env = merge(var.global_env, try(server.env, {}))
+
       immutable_fields_hash = sha1(join("", concat(
         [var.name, var.cidr.pods, var.cidr.services],
         var.global_flags,
         try(server.flags, []),
+        [jsonencode(var.global_env), jsonencode(try(server.env, {}))],
       )))
     }
   }
@@ -197,10 +200,16 @@ resource "null_resource" "servers_install" {
     destination = "/tmp/k3s-installer"
   }
 
+  // Upload env file
+  provisioner "file" {
+    content     = templatefile("${path.module}/templates/env.sh.tpl", { env = local.servers_metadata[each.key].env } )
+    destination = "/tmp/env.sh"
+  }
+
   // Install k3s server
   provisioner "remote-exec" {
     inline = [
-      "INSTALL_K3S_VERSION=${local.k3s_version} sh /tmp/k3s-installer server ${local.servers_metadata[each.key].flags}",
+      ". /tmp/env.sh && INSTALL_K3S_VERSION=${local.k3s_version} sh /tmp/k3s-installer server ${local.servers_metadata[each.key].flags}",
       "until kubectl get node ${local.servers_metadata[each.key].name}; do sleep 1; done"
     ]
   }

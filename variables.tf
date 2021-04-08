@@ -56,6 +56,12 @@ variable "global_flags" {
   default     = []
 }
 
+variable "global_env" {
+  description = "Add additional environment variables used by all nodes."
+  type        = map(string)
+  default     = {}
+}
+
 variable "servers" {
   description = "K3s server nodes definition. The key is used as node name if no name is provided."
   type        = map(any)
