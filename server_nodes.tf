@@ -85,7 +85,7 @@ locals {
           "--cluster-cidr ${var.cidr.pods}",
           "--service-cidr ${var.cidr.services}",
           "--token ${random_password.k3s_cluster_secret.result}",
-          length(var.servers) > 1 ? "--cluster-init" : "",
+          length(var.servers) > 1 || var.cluster_init ? "--cluster-init" : "",
         ] :
         // For other server nodes, use agent flags (because the first node manage the cluster configuration)
         [

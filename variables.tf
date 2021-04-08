@@ -62,6 +62,12 @@ variable "global_env" {
   default     = {}
 }
 
+variable "cluster_init" {
+  description = "Always include --cluster-init flag, even on single node clusters"
+  type        = bool
+  default     = false 
+}
+
 variable "servers" {
   description = "K3s server nodes definition. The key is used as node name if no name is provided."
   type        = map(any)
