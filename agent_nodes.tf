@@ -57,7 +57,7 @@ locals {
       env = merge(var.global_env, try(agent.env, {}))
     
       immutable_fields_hash = sha1(join("", concat(
-        [var.name],
+        [var.domain],
         var.global_flags,
         try(agent.flags, []),
         [jsonencode(var.global_env), jsonencode(try(agent.env, {}))],

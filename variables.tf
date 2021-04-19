@@ -10,6 +10,12 @@ variable "k3s_version" {
 }
 
 variable "name" {
+  description = "K3s cluster name (used to set context)"
+  type        = string
+  default     = "cluster"
+}
+
+variable "domain" {
   description = "K3s cluster domain name (see https://rancher.com/docs/k3s/latest/en/installation/install-options/)."
   type        = string
   default     = "cluster.local"
