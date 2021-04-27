@@ -12,7 +12,7 @@ output "kubernetes" {
 }
 
 output "kube_config" {
-  description = "Genereated kubeconfig."
+  description = "Generated kubeconfig."
   value = var.generate_ca_certificates == false ? null : yamlencode({
     apiVersion = "v1"
     clusters = [{
@@ -25,7 +25,7 @@ output "kube_config" {
     contexts = [{
       context = {
         cluster = var.name
-        user : "master-user"
+        user : local.cluster_username
       }
       name = var.name
     }]
@@ -37,7 +37,7 @@ output "kube_config" {
         client-certificate-data : base64encode(local.client_certificate)
         client-key-data : base64encode(local.client_key)
       }
-      name : "master-user"
+      name : local.cluster_username
     }]
   })
   sensitive = true

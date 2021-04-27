@@ -15,6 +15,12 @@ variable "name" {
   default     = "cluster"
 }
 
+variable "username" {
+  description = "Specify an explicit kubectl username, otherwise the user name will be generated as {cluster}_admin"
+  type        = string
+  default     = ""
+}
+
 variable "domain" {
   description = "K3s cluster domain name (see https://rancher.com/docs/k3s/latest/en/installation/install-options/)."
   type        = string

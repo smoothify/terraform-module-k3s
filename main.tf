@@ -8,6 +8,7 @@ locals {
   managed_annotation_enabled = contains(var.managed_fields, "annotation")
   managed_label_enabled      = contains(var.managed_fields, "label")
   managed_taint_enabled      = contains(var.managed_fields, "taint")
+  cluster_username           = coalesce(var.username, "${var.name}_admin")
 }
 
 // null_resource used as dependency agregation.
