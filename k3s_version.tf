@@ -3,12 +3,20 @@ data "http" "k3s_version" {
   url = "https://update.k3s.io/v1-release/channels"
 }
 
-// Fetch the k3s installation script
-data "http" "k3s_installer" {
-  url = "https://raw.githubusercontent.com/rancher/k3s/${jsondecode(data.http.k3s_version.body).data[1].latest}/install.sh"
+locals {
+  // Use the fetched version if 'latest' is specified
+  
+  k3s_version_data = jsondecode(data.http.k3s_version.body).data 
+  
+  k3s_version_map = {
+    stable = local.k3s_version_data[0].latest
+    latest = local.k3s_version_data[1].latest
+  }
+  
+  k3s_version = lookup(local.k3s_version_map, var.k3s_version, var.k3s_version)
 }
 
-locals {
-  // Use the fetched version if 'lastest' is specified
-  k3s_version = var.k3s_version == "latest" ? jsondecode(data.http.k3s_version.body).data[1].latest : var.k3s_version
+// Fetch the k3s installation script
+data "http" "k3s_installer" {
+  url = "https://raw.githubusercontent.com/rancher/k3s/${local.k3s_version}/install.sh"
 }
