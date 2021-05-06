@@ -43,6 +43,39 @@ output "kube_config" {
   sensitive = true
 }
 
+output "kube_config_internal" {
+  description = "Generated kubeconfig."
+  value = var.generate_ca_certificates == false ? null : yamlencode({
+    apiVersion = "v1"
+    clusters = [{
+      cluster = {
+        certificate-authority-data = base64encode(local.cluster_ca_certificate)
+        server                     = "https://${local.root_server_connection.ip_internal}:6443"
+      }
+      name = var.name
+    }]
+    contexts = [{
+      context = {
+        cluster = var.name
+        user : local.cluster_username
+      }
+      name = var.name
+    }]
+    current-context = var.name
+    kind            = "Config"
+    preferences     = {}
+    users = [{
+      user = {
+        client-certificate-data : base64encode(local.client_certificate)
+        client-key-data : base64encode(local.client_key)
+      }
+      name : local.cluster_username
+    }]
+  })
+  sensitive = true
+}
+
+
 output "summary" {
   description = "Current state of k3s (version & nodes)."
   value = {

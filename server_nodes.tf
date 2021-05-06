@@ -2,6 +2,7 @@ locals {
   // Some vars use to easily access to the first k3s server values
   root_server_name = keys(var.servers)[0]
   root_server_ip   = values(var.servers)[0].ip
+
   root_server_connection = {
     type = try(var.servers[local.root_server_name].connection.type, "ssh")
 
@@ -10,6 +11,8 @@ locals {
     password = try(var.servers[local.root_server_name].connection.password, null)
     port     = try(var.servers[local.root_server_name].connection.port, null)
     timeout  = try(var.servers[local.root_server_name].connection.timeout, null)
+
+    ip_internal = try(var.servers[local.root_server_name].ip_internal, var.servers[local.root_server_name].ip)
 
     script_path    = try(var.servers[local.root_server_name].connection.script_path, null)
     private_key    = try(var.servers[local.root_server_name].connection.private_key, null)
@@ -84,7 +87,7 @@ locals {
           "--cluster-domain '${var.domain}'",
           "--cluster-cidr ${var.cidr.pods}",
           "--service-cidr ${var.cidr.services}",
-          "--token ${random_password.k3s_cluster_secret.result}",
+          "--token ${nonsensitive(random_password.k3s_cluster_secret.result)}",
           length(var.servers) > 1 || var.cluster_init ? "--cluster-init" : "",
         ] :
         // For other server nodes, use agent flags (because the first node manage the cluster configuration)
@@ -92,7 +95,7 @@ locals {
           "--node-ip ${server.ip}",
           "--node-name '${try(server.name, key)}'",
           "--server https://${local.root_server_ip}:6443",
-          "--token ${random_password.k3s_cluster_secret.result}",
+          "--token ${nonsensitive(random_password.k3s_cluster_secret.result)}",
         ],
         var.global_flags,
         try(server.flags, []),
@@ -202,7 +205,7 @@ resource "null_resource" "servers_install" {
 
   // Upload env file
   provisioner "file" {
-    content     = templatefile("${path.module}/templates/env.sh.tpl", { env = local.servers_metadata[each.key].env } )
+    content     = templatefile("${path.module}/templates/env.sh.tpl", { env = local.servers_metadata[each.key].env })
     destination = "/tmp/env.sh"
   }
 
